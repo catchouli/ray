@@ -34,7 +34,7 @@ render width height f buf = forM_ [0..height-1] $ \y -> do
     -- Get (-1..1) xy coordinate
     let normalise max val = val / max * 2.0 - 1.0 :: Float
     let xf = normalise (fromIntegral width) (fromIntegral x)
-    let yf = normalise (fromIntegral height) (fromIntegral y)
+    let yf = normalise (fromIntegral height) (fromIntegral (height - y))
     -- Calculate color
     let col = f xf yf
     -- Store
@@ -100,8 +100,15 @@ withTexture width height f = withWindow width height $ \window renderer -> do
   -- Create pixel buffer
   pixelBuffer <- newArray (0, width * height - 1) 0 :: IO (StorableArray Int CUInt)
 
+  -- Get start time
+  startTime <- SDL.ticks
+
   -- Render image
   withStorableArray pixelBuffer (render width height f)
+
+  -- Get end time and tell user how long it took
+  endTime <- SDL.ticks
+  putStrLn $ "Rendering took " ++ show (fromIntegral (endTime - startTime) / 1000.0) ++ " seconds"
 
   -- Main loop
   let loop timingInfo = do

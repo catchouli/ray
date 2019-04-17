@@ -12,6 +12,7 @@ import Foreign.Storable (poke)
 import qualified Foreign.Marshal.Array as M
 import Foreign.C.Types
 import Data.Bits
+import Control.Applicative
 
 -- | Ray
 data Ray = Ray
@@ -39,14 +40,14 @@ data Sphere = Sphere (L.V3 Float) Float (L.V3 Float) deriving (Show)
 -- | Our scene definition
 scene :: [Ray -> Maybe Hit]
 scene = map raySphereIntersection
-  [ Sphere (L.V3 0 0 (-5)) 2.5 (L.V3 1.0 0.0 0.0)
-  , Sphere (L.V3 4.0 0 (-10.5)) 5 (L.V3 0.0 1.0 0.0)
-  , Sphere (L.V3 0 14 (-5)) 10 (L.V3 1.0 1.0 1.0)
+  [ Sphere (L.V3 0 (-1) 5) 1 (L.V3 1.0 0.0 0.0)
+  , Sphere (L.V3 2 0 7) 2 (L.V3 0.0 1.0 0.0)
+  , Sphere (L.V3 0 (-52) (5)) 50 (L.V3 1.0 1.0 1.0)
   ]
 
 -- | Our lighting definition
 light :: Light
-light = Light (L.V3 (-5) (-2.5) 0) (L.V3 1.0 0.8 0.8)
+light = Light (L.V3 (-5) (2.5) 0) (L.V3 1.0 0.8 0.8)
 
 -- | Intersect scene
 intersectScene :: Ray -> [Ray -> Maybe Hit] -> Maybe Hit
@@ -92,15 +93,16 @@ shade (Hit hitPos hitNrm _ hitAlbedo) (Light lightPos lightCol) = col
 -- | Ray trace against our scene
 trace :: Float -> Float -> L.V4 Float
 trace x y = case col of
-    Just (L.V3 r g b) -> L.V4 r g b 1
-    Nothing -> L.V4 0 0 0 1
+    L.V3 r g b -> L.V4 r g b 1
   where
     fov = pi / 6.0 :: Float
-    z = -1.0 / tan fov
-    rayDir = L.normalize $ L.V3 x y (-1)
+    z = 1.0 / tan fov
+    rayDir = L.normalize $ L.V3 x y z
     ray = Ray (L.V3 0 0 0) rayDir
     hit = intersectScene ray scene
-    col = shade <$> hit <*> pure light
+    sky = L.lerp (1.0 - (y * 0.5 + 0.5)) (L.V3 0.78 0.78 0.7) (L.V3 0.3 0.4 0.5)
+    sceneCol = shade <$> hit <*> pure light
+    Just col = sceneCol <|> Just sky
 
 -- | Standard window width and height
 width, height :: Num a => a
