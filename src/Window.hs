@@ -11,14 +11,11 @@ import qualified SDL
 import Control.Monad
 import qualified Linear as L
 import Data.Array.Storable
-import qualified Data.Vector.Storable as V
-import qualified Data.Vector.Storable.Mutable as M
 import Foreign.Ptr
 import Foreign.Storable (poke)
 import qualified Foreign.Marshal.Array as M
 import Foreign.C.Types
 import Data.Bits
-import Control.Monad.ST (runST)
 
 -- | Clamp function
 clamp :: (Num a, Ord a) => a -> a -> a -> a
@@ -139,4 +136,3 @@ withTexture width height f = withWindow width height $ \window renderer -> do
   loop (TimingInfo time 0 time 0)
 
   SDL.destroyTexture texture
-  
